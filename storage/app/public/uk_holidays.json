@@ -1,0 +1,17 @@
+[
+    {
+        "date":"2021-11-30",
+        "localName":"Saint Andrew's Day",
+        "name":"Saint Andrew's Day",
+        "countryCode":"GB",
+        "fixed":true,
+        "global":false,
+        "counties":[
+            "GB-SCT"
+        ],
+        "launchYear":null,
+        "types":[
+            "Public"
+        ]
+    }
+]

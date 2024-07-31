@@ -1,0 +1,91 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel_app
+    ports:
+      - "9000:9000"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel
+
+  web:
+    image: nginx:1.21.6-alpine
+    container_name: laravel_nginx
+    ports:
+      - "8080:80" # Changed from 8081 to 8080 to avoid port conflict
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - .:/var/www/html
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    networks:
+      - laravel
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+    - /Users/peterkimani/Desktop/RSRepo/RS_backend/storage/logs:/var/log/laravel_logs
+    - ./promtail-config/promtail-config.yaml:/etc/promtail/config/promtail-config.yaml
+    command: -config.file=/etc/promtail/config/promtail-config.yaml
+    networks:
+      - laravel
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - laravel
+    depends_on:
+      - app
+
+  db:
+    image: mariadb:10.5.9-focal
+    container_name: laravel_db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    platform: linux/amd64 # Use the arm64 architecture image
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "8082:80"
+    depends_on:
+      - db
+    networks:
+      - laravel
+
+volumes:
+  dbdata:
+
+networks:
+  laravel:
+    driver: bridge
